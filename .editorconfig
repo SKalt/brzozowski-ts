@@ -1,0 +1,34 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# This is the top-most EditorConfig file: ~/.editorconfig
+root = true
+
+[*]
+  # Unix-style newlines with a newline ending every file
+  end_of_line = lf
+  insert_final_newline = true
+
+  # assume all files are utf-8 unless otherwise specified
+  charset = utf-8
+
+  # prefer indenting with two spaces
+  indent_size = 2
+  indent_style = space
+
+# CSV and TSVs can be sensitive to trailing newlines
+[*.csv]
+  insert_final_newline = false
+[*.tsv]
+  insert_final_newline = false
+
+# Python and rust customarily use 4-space indentation
+[*.py]
+  indent_size = 4
+[*.rs]
+  indent_size = 4
+
+[*.go]
+  indent_style = tab
+[Makefile]
+  indent_style = tab
+
