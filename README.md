@@ -24,7 +24,7 @@ foo("abz")
 ## Limitations
 
 - `RecognizePattern<RE, Str>` uses a **very** limited and poorly-implemented regular expression language:
-    - only `a-z`, `A-Z`, and `0-9` are recognized in char class literals `[0-9a-zA-Z]`
+    - only `a-z`, `A-Z`, and `0-9` are recognized in char class literals `[0-9a-zA-Z]`, no partial ranges like `a-f`
     - no common character classes outside of char class literals: `\d\s\w` etc.
     - no negated char classes: `[^nope]`
     - no named capture groups: `(?<nope>)`
@@ -46,8 +46,23 @@ If you must, either
 
 # Design
 
+Compile-time parsing follows this general algorithm:
+0. Given a constant string type `S` and a regular expression string type `R` 
+1. take the derivative of `R` with respect the start of `S` to produce a shorter regular expression `r` and a shorter string `s`
+2. recur using `s` and `r` 
+3. when `r` is empty, the entire regular expression has been matched.
+4. if `s` is empty and `r` is not, the expression has not been matched
 
+## note about formatting
+I'm not using `prettier` in order to algin deeply-nested of type conditions:
+```ts
+type X<Y> =
+    Y extends A<infer U> ? U
+  : Y extends B<infer U> ? U
+  : Y extends C<infer U> ? U
+  : never
+```
 
-
+<!-- links -->
 [wiki]: https://en.wikipedia.org/wiki/Brzozowski_derivative
 [ts-issue]: https://github.com/microsoft/TypeScript/issues/41160#issuecomment-1503653578
