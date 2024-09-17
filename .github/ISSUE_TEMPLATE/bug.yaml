@@ -1,0 +1,28 @@
+name: Bug Report
+description: File a bug report.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: textarea
+    id: expectation
+    attributes:
+      label: Expected behavior
+      placeholder: Tell us what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: reality
+    attributes:
+      label: Actual behavior
+      placeholder: Tell us what you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+      value: "```ts\n\n//\n```\n\nlink to reproducible example: ___"
+    validations:
+      required: true

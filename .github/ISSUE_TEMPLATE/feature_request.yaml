@@ -1,0 +1,22 @@
+name: Feature request
+description: Request a new feature.
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      placeholder: Describe the problems this feature would solve.
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Actual behavior
+      placeholder: |
+        ```ts
+        // tests that demonstrate the expected behavior
+        ```
+    validations:
+      required: true

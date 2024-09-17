@@ -1,4 +1,4 @@
 import { mustBeHex } from "../ok/hex";
 
-mustBeHex("abz");
-mustBeHex("abz" as string);
+mustBeHex("abz"); // xfail
+mustBeHex("abz" as string); // xfail
