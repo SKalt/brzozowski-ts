@@ -20,6 +20,8 @@ type RecognizeDerivative<P extends string, S extends string> = Eq<
   ""
 >;
 
+type AnyChar<S extends string> = S extends `${infer _}${infer R}` ? R : never;
+
 type _Many<P extends string, S extends string, T> =
   [Derivative<P, S>] extends [infer R extends string] ?
     [R] extends [never] ?
@@ -52,6 +54,7 @@ export type DerivePattern<RE extends string, S extends string> =
   : RE extends `(${infer P})*${infer Rest}` ? DerivePattern<Rest, Many0<P, S>>
   : RE extends `(${infer P})+${infer Rest}` ? DerivePattern<Rest, Many1<P, S>>
   : RE extends `(${infer P})?${infer Rest}` ? DerivePattern<Rest, Opt<P, S>>
+  : RE extends `.${infer Rest}` ? DerivePattern<Rest, AnyChar<S>>
   : RE extends `${infer P}${infer Rest}` ? DerivePattern<Rest, Derivative<P, S>>
   : never;
 
