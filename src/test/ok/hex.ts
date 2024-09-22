@@ -12,3 +12,8 @@ type HexStr<S extends string> =
 
 export const mustBeHex = <S extends string>(s: HexStr<S>) => s;
 mustBeHex("abc"); // ok
+
+// @ts-expect-error: "abz" is not a valid hex string
+mustBeHex("abz");
+// @ts-expect-error: "abz" is not a valid hex string
+mustBeHex("abz" as string);
