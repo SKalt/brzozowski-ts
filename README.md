@@ -26,7 +26,6 @@ foo("abz");
 - `RecognizePattern<RE, Str>` uses a **very** limited and poorly-implemented regular expression language:
   - only `a-z`, `A-Z`, and `0-9` are recognized in char class literals `[0-9a-zA-Z]`, no partial ranges like `a-f`
   - no common character classes outside of char class literals: `\d\s\w` etc.
-  - no negated char classes: `[^nope]`
   - no named capture groups: `(?<nope>)`
   - no negative lookahead: `(?!nope)`
   - no nested capture groups: `(no(pe))`
