@@ -2,7 +2,8 @@
 
 An experiment in implementing static checks of regular expressions in Typescript using [Brzozowski derivatives][wiki].
 
-This relates to [Typescript's RegEx-validated string types issue][ts-issue].
+This is also an experiment in what an API for what a RegEx-validated string type might look like.
+There has already been discussion of the use cases and potential API in the [Typescript RegEx-validated string types issue][ts-issue].
 
 # Use case
 
@@ -10,15 +11,14 @@ This allows you to make assertions about constants:
 
 ```ts
 type HexStr<S extends string> =
-  RecognizePattern<`[0-9abcdef]+`, S> extends true ? S
+  RecognizePattern<"[0-9abcdef]+", S> extends true ? S
   : `${S} is not a hex string`;
 
 const foo = <S extends string>(s: HexStr<S>): void => {};
 foo("abc"); // ok!
-foo("abz");
-//   ~~~
-// error: Argument of type '"abz"' is not assignable to
-// parameter of type '"abz is not a hex string"'
+foo("abz"); // error
+//   ~~~   Argument of type '"abz"' is not assignable to
+//         parameter of type '"abz is not a hex string"'
 ```
 
 ## Limitations
@@ -37,12 +37,12 @@ foo("abz");
 
 # Usage
 
-Don't. This is a hack, it's brittle, and it's pre-alpha: the API will change without warning.
+This is pre-alpha software: the API will change without warning, the implementation is brittle and incomplete, and it has not been optimized.
 
-If you must, either
+If you're brave, you can:
 
-- copy-paste `src/index.d.ts` into your codebase
-- `pnpm add -D "git+https://github.com/this/repo"`
+- copy-paste `src/index.d.ts` and `src/internal.d.ts` into your codebase
+- `pnpm add -D "git+https://github.com/skalt/brzozowski-ts.git"`
 
 # Design
 

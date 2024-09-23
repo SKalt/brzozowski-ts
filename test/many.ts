@@ -1,6 +1,6 @@
-import { Many0, Many1 } from "../..";
-import { Digit } from "../../char";
-import { Assert, Eq } from "../../utils";
+import { Many0, Many1 } from "../src/internal";
+import { Digit } from "../src/char";
+import { Assert, Eq } from "../src/utils";
 
 {
   const _m0: Assert<Eq<Many0<"a", "aab">, "b">> = true;

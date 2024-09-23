@@ -1,6 +1,6 @@
-import { Derivative, RecognizeDerivative } from "../..";
-import { Digit } from "../../char";
-import { Assert, Eq } from "../../utils";
+import { Derivative, RecognizeDerivative } from "../src/internal";
+import { Digit } from "../src/char";
+import { Eq } from "../src/utils";
 
 {
   const _p0: Eq<Derivative<"a", "abc">, "bc"> = true;
