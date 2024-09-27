@@ -4,7 +4,7 @@ This module is for internal use only.
 Only import from this module if you're 100% sure you need to, and you're sure you
 understand what you're doing.
 */
-import { AsciiLowercase, AsciiUppercase, Digit } from "./char";
+import { AsciiLowercase, AsciiUppercase, Digit, Whitespace } from "./char";
 import { Eq } from "./utils";
 
 /**
@@ -43,6 +43,7 @@ export type Many1<Prefix extends string, Str extends string> =
 
 export type CharClass<Pattern extends string> =
   Pattern extends `\\d${infer Rest}` ? Digit | CharClass<Rest>
+  : Pattern extends `\\s${infer Rest}` ? Whitespace | CharClass<Rest>
   : Pattern extends `0-9${infer Rest}` ? Digit | CharClass<Rest>
   : Pattern extends `A-Z${infer Rest}` ? AsciiUppercase | CharClass<Rest>
   : Pattern extends `a-z${infer Rest}` ? AsciiLowercase | CharClass<Rest>
