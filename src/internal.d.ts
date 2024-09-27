@@ -7,66 +7,64 @@ understand what you're doing.
 import { AsciiLowercase, AsciiUppercase, Digit } from "./char";
 import { Eq } from "./utils";
 
-export type Derivative<
-  P extends string,
-  S extends string, // should be specific
-> =
-  string extends P | S ?
-    never // don't consider infinite types
-  : P extends "" ?
-    never // the prefix literal should be nonempty
-  : S extends `${P}${infer R extends string}` ? R
+/**
+TODO: notes about how this is a Brzozowski derivative
+*/
+export type Derivative<Prefix extends string, Str extends string> =
+  string extends Prefix | Str ? never /* don't consider infinite types */
+  : Prefix extends "" ? never /* the prefix literal should be nonempty */
+  : Str extends `${Prefix}${infer R extends string}` ? R
   : never;
 
-type Opt<P extends string, S extends string> =
-  [Derivative<P, S>] extends [never] ? S : Derivative<P, S>;
+type Opt<Prefix extends string, Str extends string> =
+  [Derivative<Prefix, Str>] extends [never] ? Str : Derivative<Prefix, Str>;
 
-type RecognizeDerivative<P extends string, S extends string> = Eq<
-  Derivative<P, S>,
-  ""
->;
+/**
+Infers the derivative of the input string `Str` with respect to any single
+character. In other words, this chops off the first character of `Str`. If
+`Str` is empty, `AnyChar<"">` infers `never`.
+*/
+export type AnyChar<Str extends string> =
+  Str extends `${infer _}${infer Rest}` ? Rest : never;
 
-export type AnyChar<S extends string> =
-  S extends `${infer _}${infer R}` ? R : never;
-
-export type Many0<P extends string, S extends string> =
-  [Derivative<P, S>] extends [infer R extends string] ?
-    [R] extends [never] ?
-      S
-    : Many0<P, R>
+export type Many0<Prefix extends string, Str extends string> =
+  [Derivative<Prefix, Str>] extends [infer Rest extends string] ?
+    [Rest] extends [never] ?
+      Str
+    : Many0<Prefix, Rest>
   : never;
 
-export type Many1<P extends string, S extends string> =
-  [Derivative<P, S>] extends [infer R extends string] ?
-    [R] extends [never] ?
+export type Many1<Prefix extends string, Str extends string> =
+  [Derivative<Prefix, Str>] extends [infer Rest extends string] ?
+    [Rest] extends [never] ?
       never
-    : Many0<P, R>
+    : Many0<Prefix, Rest>
   : never;
 
-export type CharClass<RE extends string> =
-  RE extends `\\d${infer Rest}` ? Digit | CharClass<Rest>
-  : RE extends `0-9${infer Rest}` ? Digit | CharClass<Rest>
-  : RE extends `A-Z${infer Rest}` ? AsciiUppercase | CharClass<Rest>
-  : RE extends `a-z${infer Rest}` ? AsciiLowercase | CharClass<Rest>
-  : RE extends `${infer c}${infer Rest}` ? c | CharClass<Rest>
+export type CharClass<Pattern extends string> =
+  Pattern extends `\\d${infer Rest}` ? Digit | CharClass<Rest>
+  : Pattern extends `0-9${infer Rest}` ? Digit | CharClass<Rest>
+  : Pattern extends `A-Z${infer Rest}` ? AsciiUppercase | CharClass<Rest>
+  : Pattern extends `a-z${infer Rest}` ? AsciiLowercase | CharClass<Rest>
+  : Pattern extends `${infer c}${infer Rest}` ? c | CharClass<Rest>
   : never;
 
-export type NotChars<P extends string, S extends string> =
-  S extends "" ? ""
-  : S extends `${P}${infer _}` ? never
-  : AnyChar<S>;
+export type NotChars<CharsToAvoid extends string, Str extends string> =
+  Str extends "" ? ""
+  : Str extends `${CharsToAvoid}${infer _}` ? never
+  : AnyChar<Str>;
 
-type OptNotChars<P extends string, S extends string> =
-  S extends "" ? ""
-  : S extends `${P}${infer _}` ? S
-  : AnyChar<S>;
+type OptNotChars<CharsToAvoid extends string, Str extends string> =
+  Str extends "" ? ""
+  : Str extends `${CharsToAvoid}${infer _}` ? Str
+  : AnyChar<Str>;
 
-export type Many0NotChars<P extends string, S extends string> =
-  S extends "" ? ""
-  : S extends `${P}${infer _}` ? S
-  : Many0NotChars<P, AnyChar<S>>;
+export type Many0NotChars<CharsToAvoid extends string, Str extends string> =
+  Str extends "" ? ""
+  : Str extends `${CharsToAvoid}${infer _}` ? Str
+  : Many0NotChars<CharsToAvoid, AnyChar<Str>>;
 
-export type Many1NotChars<P extends string, S extends string> =
-  S extends "" ? never
-  : S extends `${P}${infer _}` ? never
-  : Many0NotChars<P, AnyChar<S>>;
+export type Many1NotChars<CharsToAvoid extends string, Str extends string> =
+  Str extends "" ? never
+  : Str extends `${CharsToAvoid}${infer _}` ? never
+  : Many0NotChars<CharsToAvoid, AnyChar<Str>>;

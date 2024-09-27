@@ -1,4 +1,4 @@
-import { Derivative, RecognizeDerivative } from "../src/internal";
+import { Derivative } from "../src/internal";
 import { Digit } from "../src/char";
 import { Eq } from "../src/utils";
 
@@ -10,9 +10,4 @@ import { Eq } from "../src/utils";
   const _p4: Eq<Derivative<Digit, "123abc">, "23abc"> = true;
   const _p5: Eq<Derivative<"c", "cow" | "cat" | "dog">, "at" | "ow"> = true;
   const _p6: Eq<Derivative<"c" | "d", "cat">, "at"> = true;
-}
-
-{
-  const _r0: Eq<RecognizeDerivative<"a", "abc">, false> = true;
-  const _r1: Eq<RecognizeDerivative<"a", "a">, true> = true;
 }
