@@ -3,11 +3,36 @@ import { Digit } from "../src/char";
 import { Eq } from "../src/utils";
 
 {
-  const _p0: Eq<Derivative<"a", "abc">, "bc"> = true;
-  const _p1: Eq<Derivative<"a", "bc">, never> = true;
-  const _p2: Eq<Derivative<"", "bc">, never> = true;
-  const _p3: Eq<Derivative<"", "">, never> = true;
-  const _p4: Eq<Derivative<Digit, "123abc">, "23abc"> = true;
-  const _p5: Eq<Derivative<"c", "cow" | "cat" | "dog">, "at" | "ow"> = true;
-  const _p6: Eq<Derivative<"c" | "d", "cat">, "at"> = true;
+  type Actual = Derivative<"a", "abc">;
+  const _: Eq<Actual, "bc"> = true;
+}
+
+{
+  type Actual = Derivative<"a", "bc">;
+  const _: Eq<Actual, never> = true;
+}
+
+{
+  type Actual = Derivative<"", "bc">;
+  const _: Eq<Actual, never> = true;
+}
+
+{
+  type Actual = Derivative<"", "">;
+  const _: Eq<Actual, never> = true;
+}
+
+{
+  type Actual = Derivative<Digit, "123abc">;
+  const _: Eq<Actual, "23abc"> = true;
+}
+
+{
+  type Actual = Derivative<"c", "cow" | "cat" | "dog">;
+  const _: Eq<Actual, "at" | "ow"> = true;
+}
+
+{
+  type Actual = Derivative<"c" | "d", "cat">;
+  const _: Eq<Actual, "at"> = true;
 }

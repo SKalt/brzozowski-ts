@@ -3,31 +3,90 @@ import { Many0NotChars, Many1NotChars, NotChars } from "../src/internal";
 import { Eq } from "../src/utils";
 
 {
-  const nope: Eq<NotChars<"a" | "z", "abc">, never> = true;
-  const anyOtherWorks: Eq<NotChars<"a" | "z", "bcd">, "cd"> = true;
-  const emptyOk: Eq<NotChars<"a" | "z", "">, ""> = true;
+  type Actual = NotChars<"a" | "z", "abc">;
+  const nope: Eq<Actual, never> = true;
 }
 
 {
-  const nope: Eq<DeriveWRTRegExp<"[^a-z]", "abc">, never> = true;
-  const ok: Eq<DeriveWRTRegExp<"[^a-z]", "123">, "23"> = true;
-  const digitShouldMatchNonAlpha: Eq<DeriveWRTRegExp<"[^a-z]", "1">, ""> = true;
-  const spaceShouldMatchNonAlpha: Eq<DeriveWRTRegExp<"[^a-z]", " ">, ""> = true;
-  // const doesNotMatchInverse: RecognizeTotalPattern<"[^a-z]", "1"> = true;
+  type Actual = NotChars<"a" | "z", "bcd">;
+  const anyOtherWorks: Eq<Actual, "cd"> = true;
 }
 
 {
-  const nope: Eq<Many1NotChars<"a" | "z", "abc">, never> = true;
-  const ok: Eq<Many0NotChars<"a" | "z", "123">, ""> = true;
-  const digitShouldMatchNonAlpha: Eq<Many0NotChars<"a" | "z", "1">, ""> = true;
-  const partialMatch0: Eq<Many0NotChars<"a" | "z", "1a2b3c">, "a2b3c"> = true;
-  const partialMatch1: Eq<Many1NotChars<"a" | "z", "1a2b3c">, "a2b3c"> = true;
+  type Actual = NotChars<"a" | "z", "">;
+  const emptyOk: Eq<Actual, ""> = true;
 }
 
 {
-  const oneIsNotAb: IsCompleteMatch<"[^ab]", "1"> = true;
-  const oneIsNotAbc: IsCompleteMatch<"[^a-z]", "1"> = true;
-  const spaceIsNotAlpha: IsCompleteMatch<"[^a-z]", " "> = true;
-  const nonAlphaOk: IsCompleteMatch<"[^a-z]+", "1"> = true;
-  const ok: IsCompleteMatch<"[^a-zA-Z]+", "1 2 3"> = true;
+  type Actual = DeriveWRTRegExp<"[^a-z]", "abc">;
+  const nope: Eq<Actual, never> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]", "123">;
+  const ok: Eq<Actual, "23"> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]", "1">;
+  const digitShouldMatchNonAlpha: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]", " ">;
+  const spaceShouldMatchNonAlpha: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]", "1">;
+  const doesNotMatchInverse: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = Many1NotChars<"a" | "z", "abc">;
+  const nope: Eq<Actual, never> = true;
+}
+
+{
+  type Actual = Many0NotChars<"a" | "z", "123">;
+  const ok: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = Many0NotChars<"a" | "z", "1">;
+  const digitShouldMatchNonAlpha: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = Many0NotChars<"a" | "z", "1a2b3c">;
+  const partialMatch0: Eq<Actual, "a2b3c"> = true;
+}
+
+{
+  type Actual = Many1NotChars<"a" | "z", "1a2b3c">;
+  const partialMatch1: Eq<Actual, "a2b3c"> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]+", "1">;
+  const oneIsNotAb: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]", "1">;
+  const oneIsNotAbc: Eq<Actual, ""> = true;
+}
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]", " ">;
+  const spaceIsNotAlpha: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-z]+", "1">;
+  const nonAlphaOk: Eq<Actual, ""> = true;
+}
+
+{
+  type Actual = DeriveWRTRegExp<"[^a-zA-Z]+", "1 2 3">;
+  const ok: Eq<Actual, ""> = true;
 }

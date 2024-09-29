@@ -1,15 +1,38 @@
 import { Many0, Many1 } from "../src/internal";
 import { Digit } from "../src/char";
-import { Assert, Eq } from "../src/utils";
+import { Eq } from "../src/utils";
 
 {
-  const _m0: Assert<Eq<Many0<"a", "aab">, "b">> = true;
-  const _m2: Assert<Eq<Many0<"x", "abc">, "abc">> = true;
-  const _m5: Assert<Eq<Many0<Digit, "123abc">, "abc">> = true;
+  type Actual = Many0<"a", "aab">;
+  const _: Eq<Actual, "b"> = true;
 }
 
 {
-  const _m1: Assert<Eq<Many1<"a", "aab">, "b">> = true;
-  const _m3: Assert<Eq<Many1<"x", "abc">, never>> = true;
-  const _m4: Assert<Eq<Many1<Digit, "123abc">, "abc">> = true;
+  type Actual = Many0<"x", "abc">;
+  const _: Eq<Actual, "abc"> = true;
+}
+
+{
+  type Actual = Many0<Digit, "123abc">;
+  const _: Eq<Actual, "abc"> = true;
+}
+
+{
+  type Actual = Many1<"a", "aab">;
+  const _: Eq<Actual, "b"> = true;
+}
+
+{
+  type Actual = Many1<"x", "abc">;
+  const _: Eq<Actual, never> = true;
+}
+
+{
+  type Actual = Many1<Digit, "123abc">;
+  const _: Eq<Actual, "abc"> = true;
+}
+
+{
+  type Actual = Many0<Digit, "abc">;
+  const _: Eq<Actual, "abc"> = true;
 }
