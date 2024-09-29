@@ -5,7 +5,6 @@ Only import from this module if you're 100% sure you need to, and you're sure yo
 understand what you're doing.
 */
 import { AsciiLowercase, AsciiUppercase, Digit, Whitespace } from "./char";
-import { Eq } from "./utils";
 
 /**
 TODO: notes about how this is a Brzozowski derivative
@@ -32,7 +31,7 @@ export type Many0<Prefix extends string, Str extends string> =
     [Rest] extends [never] ?
       Str
     : Many0<Prefix, Rest>
-  : never;
+  : Str;
 
 export type Many1<Prefix extends string, Str extends string> =
   [Derivative<Prefix, Str>] extends [infer Rest extends string] ?

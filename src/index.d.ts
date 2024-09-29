@@ -1,3 +1,4 @@
+import { Digit, Whitespace, Word } from "./char";
 import {
   AnyChar,
   CharClass,
@@ -12,10 +13,33 @@ import {
 } from "./internal";
 import { Eq } from "./utils";
 
+// TODO: nicer name?
 export type DeriveWRTRegExp<RegExpr extends string, Str extends string> =
   string extends Str ? `${Str} is infinite, so it cannot match ${RegExpr}`
   : RegExpr extends "" ? Str
   : Str extends "" ? never
+  : RegExpr extends `\\d+${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Many1<Digit, Str>>
+  : RegExpr extends `\\d*${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Many0<Digit, Str>>
+  : RegExpr extends `\\d?${infer Rest}` ? DeriveWRTRegExp<Rest, Opt<Digit, Str>>
+  : RegExpr extends `\\d${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Derivative<Digit, Str>>
+  : RegExpr extends `\\s+${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Many1<Whitespace, Str>>
+  : RegExpr extends `\\s*${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Many0<Whitespace, Str>>
+  : RegExpr extends `\\s?${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Opt<Whitespace, Str>>
+  : RegExpr extends `\\s${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Derivative<Whitespace, Str>>
+  : RegExpr extends `\\w+${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Many1<Word, Str>>
+  : RegExpr extends `\\w*${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Many0<Word, Str>>
+  : RegExpr extends `\\w?${infer Rest}` ? DeriveWRTRegExp<Rest, Opt<Word, Str>>
+  : RegExpr extends `\\w${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Derivative<Word, Str>>
   : RegExpr extends `[^${infer P}]*${infer Rest}` ?
     DeriveWRTRegExp<Rest, Many0NotChars<CharClass<P>, Str>>
   : RegExpr extends `[^${infer P}]+${infer Rest}` ?
@@ -24,6 +48,8 @@ export type DeriveWRTRegExp<RegExpr extends string, Str extends string> =
     DeriveWRTRegExp<Rest, OptNotChars<CharClass<P>, Str>>
   : RegExpr extends `[^${infer P}]${infer Rest}` ?
     DeriveWRTRegExp<Rest, NotChars<CharClass<P>, Str>>
+  : RegExpr extends `[${infer P}]*${infer Rest}` ?
+    DeriveWRTRegExp<Rest, Many0<CharClass<P>, Str>>
   : RegExpr extends `[${infer P}]+${infer Rest}` ?
     DeriveWRTRegExp<Rest, Many1<CharClass<P>, Str>>
   : RegExpr extends `[${infer P}]?${infer Rest}` ?
