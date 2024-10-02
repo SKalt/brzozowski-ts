@@ -11,11 +11,14 @@ export type Union<
 // e.g. type U = `a${"x" | "y"}` == `ax` | `ay`, which messes up matching repeated
 // sequences like /a\d+/
 
-export type Repeat<I, Q> = { instruction: I; quantifier: Q };
-export type Quantifier<Min extends number, Max extends number = number> = {
+export type Repeat<I, Q extends Quantifier<any, any>> = {
+  instruction: I;
+  quantifier: Q;
+};
+export type Quantifier<Min extends number, Max extends number | null = null> = {
   min: Min;
   max: Max;
 };
-export type Star = Quantifier<0, number>;
-export type Plus = Quantifier<1, number>;
+export type Star = Quantifier<0>;
+export type Plus = Quantifier<1>;
 export type Optional = Quantifier<0, 1>;

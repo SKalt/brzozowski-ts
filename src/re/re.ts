@@ -7,7 +7,15 @@ import {
 } from "../char";
 import { _CheckFinite } from "../internal";
 import { Eq } from "../utils";
-import type { Union, Prefix, Quantifier, Plus, Star, Optional } from "./ir";
+import type {
+  Union,
+  Prefix,
+  Quantifier,
+  Plus,
+  Star,
+  Optional,
+  Repeat,
+} from "./ir";
 
 // meta-type: string => [IR, string] | { error: string }
 type _ParseEscape<Str extends string> =
@@ -123,7 +131,7 @@ type _ParseCharClassLiteral<
 }
 
 type Group<
-  Pattern extends RE<any, any, any> | null,
+  Pattern extends RE<any, any, any> = RE<[]>,
   Name extends string | null = null,
 > = {
   name: Name;
@@ -144,8 +152,8 @@ type _ParseGroup<Str extends string, State = null> =
     : Str extends `?<!${infer Rest}` ?
       [{ error: "negative lookbehind is not supported" }, Rest]
     : Str extends `?<${infer Name extends string}>${infer Rest}` ?
-      _ParseGroup<Rest, Group<null, Name>> // TODO: validate name
-    : _ParseGroup<Str, Group<null>>
+      _ParseGroup<Rest, Group<RE<[]>, Name>> // TODO: validate name
+    : _ParseGroup<Str, Group<RE<[]>>>
   : State extends Group<infer Pattern, infer Name> ?
     Str extends `${infer inner}\\)${infer Rest}` ?
       Compile<`${inner}\\)`, Pattern> extends infer R ?
@@ -183,7 +191,7 @@ type _ParseGroup<Str extends string, State = null> =
   const _: Eq<Actual, [Group<RE<[Prefix<"a)b">]>>, ""]> = true;
 }
 
-// meta-type: string => [Quantifier, string] | { error: string }
+/** meta-type: string => [Quantifier, string] | { error: string }  */
 type _ParseQuantifier<
   State extends
     | null // initial state
@@ -289,30 +297,35 @@ type _ReduceGroup<State, G extends Group<any, any>> =
           NamedCaptures & { [K in Name]: Parts["length"] }
         >
       : RE<[...Parts, G], [...Captures, Parts["length"]], NamedCaptures>
-    : { error: "!" }
-  : { error: "~" };
+    : { error: "unreachable: G must be a Group<_>" }
+  : { error: "unreachable: State must be populated" };
 
 type Reduce<State, Instruction> =
-  Instruction extends { error: any } ? Instruction
-  : State extends null ?
-    Instruction extends Group<any, any> ?
-      _ReduceGroup<RE<[]>, Instruction>
-    : RE<[Instruction]>
+  State extends { error: any } ? State
+  : Instruction extends { error: any } ? Instruction
   : State extends RE<infer Parts, infer Captures, infer NamedCaptures> ?
-    Parts extends [] ? RE<[Instruction], Captures, NamedCaptures>
-    : Instruction extends Prefix<infer P2 extends string> ?
+    Parts extends [] ?
+      Instruction extends Group<any, any> ? _ReduceGroup<RE<[]>, Instruction>
+      : Instruction extends Quantifier<any, any> ? { error: "illegal start" }
+      : RE<[Instruction]>
+    : // TODO: reduce quantifiers here
+    Instruction extends Prefix<infer P2 extends string> ?
       Parts extends [...infer Prev, Prefix<infer P1 extends string>] ?
         RE<[Prefix<`${P1}${P2}`>, ...Prev], Captures, NamedCaptures>
       : RE<[...Parts, Instruction], Captures, NamedCaptures>
     : Instruction extends Group<any, any> ? _ReduceGroup<State, Instruction>
+    : Instruction extends Quantifier<any, any> ?
+      Parts extends [...infer Prev, infer P] ?
+        RE<[...Prev, Repeat<P, Instruction>], Captures, NamedCaptures>
+      : never
     : RE<[...Parts, Instruction], Captures, NamedCaptures>
-  : never;
+  : { error: "~"; state: State };
 
 /** meta-type: string => RE | { error: string } */
-export type Compile<Src extends string, State = null> =
+export type Compile<Src extends string, State = RE<[]>> =
   _CheckFinite<Src> extends { error: infer E } ? { error: E }
   : Src extends "" ?
-    State extends null ?
+    State extends RE<[]> ?
       { error: "empty pattern" }
     : State
   : Src extends `${infer Next}${infer After}` ?
@@ -370,15 +383,15 @@ export type Compile<Src extends string, State = null> =
 }
 {
   type Actual = Compile<"[0-9]+">;
-  const _: Eq<Actual, RE<[Union<Digit>, Plus]>> = true;
+  const _: Eq<Actual, RE<[Repeat<Union<Digit>, Plus>]>> = true;
 }
 {
   type Actual = Compile<"[0-9]{3}">;
-  const _: Eq<Actual, RE<[Union<Digit>, Quantifier<3, 3>]>> = true;
+  const _: Eq<Actual, RE<[Repeat<Union<Digit>, Quantifier<3, 3>>]>> = true;
 }
 {
   type Actual = Compile<"[0-9]{3,}">;
-  const _: Eq<Actual, RE<[Union<Digit>, Quantifier<3, number>]>> = true;
+  const _: Eq<Actual, RE<[Repeat<Union<Digit>, Quantifier<3>>]>> = true;
 }
 {
   type Actual = Compile<"">;
@@ -426,3 +439,46 @@ type CaptureNames<R extends RE<any, any, any>> =
 // -----------------------------------------------------------------------------
 // parsing
 // -----------------------------------------------------------------------------
+
+type ReMatch<
+  Captures extends [...string[]],
+  Named extends Record<string, string>,
+> = Captures & Named;
+
+type _State<M extends readonly [...unknown[]]> = {
+  matches: M;
+}; // & RE<_>
+
+type _Exec<State, Instructions extends [...unknown[]], Str extends string> =
+  Instructions extends [] ? State
+  : Instructions extends [infer Instruction, ...infer Rest] ?
+    Instruction extends Prefix<infer P extends string> ?
+      Str extends `${P}${infer After}` ?
+        Str extends `${infer _matched}${After}` ?
+          [_matched]
+        : never
+      : never
+    : never
+  : never;
+
+type Exec<
+  R extends RE<any, any, any>,
+  Str extends string,
+  Matches extends readonly [...string[]] = [],
+  NamedCaptureValues extends Record<string, string> = {},
+> =
+  Matches["length"] extends R["parts"]["length"] ?
+    [Matches & NamedCaptureValues, Str] // TODO: gather named captures
+  : R["parts"][Matches["length"]] extends infer Instruction ?
+    Instruction extends Prefix<infer P extends string> ?
+      Str extends `${P}${infer After}` ?
+        Exec<R, After, [...Matches, P], NamedCaptureValues>
+      : never // TODO: raise an error
+    : never
+  : never;
+
+{
+  type MyRegex = Compile<"a">;
+  type Actual = Exec<MyRegex, "ab">;
+  const _: Eq<Actual, [["a"], "b"]> = true;
+}
