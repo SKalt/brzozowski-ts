@@ -1,5 +1,6 @@
 import { Digit, Whitespace, Word } from "./char";
 import {
+  _CheckFinite,
   AnyChar,
   CharClass,
   Derivative,
@@ -15,7 +16,7 @@ import { Eq } from "./utils";
 
 // TODO: nicer name?
 export type DeriveWRTRegExp<RegExpr extends string, Str extends string> =
-  string extends Str ? `${Str} is infinite, so it cannot match ${RegExpr}`
+  _CheckFinite<Str> extends { error: infer E } ? { error: E }
   : RegExpr extends "" ? Str
   : Str extends "" ? never
   : RegExpr extends `\\d+${infer Rest}` ?

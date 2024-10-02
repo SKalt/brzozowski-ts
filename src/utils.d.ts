@@ -5,3 +5,6 @@ export type Eq<Actual, Expected> =
       true
     : false
   : false;
+
+export type FirstChar<Str extends string> =
+  Str extends `${infer Char}${string}` ? Char : never;

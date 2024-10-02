@@ -6,6 +6,9 @@ understand what you're doing.
 */
 import { AsciiLowercase, AsciiUppercase, Digit, Whitespace } from "./char";
 
+type _CheckFinite<Str extends string> =
+  string extends Str ? { error: `${Str} is infinite` } : true;
+
 /**
 TODO: notes about how this is a Brzozowski derivative
 */
@@ -24,7 +27,7 @@ character. In other words, this chops off the first character of `Str`. If
 `Str` is empty, `AnyChar<"">` infers `never`.
 */
 export type AnyChar<Str extends string> =
-  Str extends `${infer _}${infer Rest}` ? Rest : never;
+  Str extends `${infer _}${infer Rest}` ? Rest : "";
 
 export type Many0<Prefix extends string, Str extends string> =
   [Derivative<Prefix, Str>] extends [infer Rest extends string] ?
