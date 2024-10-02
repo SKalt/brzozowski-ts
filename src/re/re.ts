@@ -40,7 +40,7 @@ type _ParseCharRange<Start extends string, End extends string> =
   [Start, End] extends ["a", "z"] ? Union<AsciiLowercase>
   : [Start, End] extends ["A", "Z"] ? Union<AsciiUppercase>
   : [Start, End] extends ["0", "9"] ? Union<Digit>
-  : { error: `unsupported char range: ${Start}-${End}` };
+  : { error: "unsupported char range"; start: Start; end: End };
 
 // meta-type: string => [Union, string] | { error: string }
 type _ParseCharClassLiteral<
@@ -54,7 +54,7 @@ type _ParseCharClassLiteral<
 > =
   Str extends "" ? [{ error: "unterminated char class" }, Str]
   : State extends null ?
-    Str extends `]${infer _}` ? { error: `empty char class: ${Str}` }
+    Str extends `]${infer _}` ? { error: "empty char class: []" }
     : Str extends `^${infer Rest extends string}` ?
       _ParseCharClassLiteral<{ inverse: true; union: Union }, Rest>
     : _ParseCharClassLiteral<{ inverse: false; union: Union }, Str>
@@ -168,7 +168,7 @@ type _ParseGroup<Str extends string, State = null> =
         : [{ error: `unreachable: Compile => RE | Err` }, Rest]
       : never
     : [{ error: "unreachable: state should always be Group<_> | null" }, Str]
-  : [{ error: "unreachable: 2" }, State];
+  : [{ error: "unreachable: state should always be Group<_> | null" }, State];
 
 {
   type Actual = _ParseGroup<"">;
@@ -308,18 +308,19 @@ type Reduce<State, Instruction> =
       Instruction extends Group<any, any> ? _ReduceGroup<RE<[]>, Instruction>
       : Instruction extends Quantifier<any, any> ? { error: "illegal start" }
       : RE<[Instruction]>
-    : // TODO: reduce quantifiers here
-    Instruction extends Prefix<infer P2 extends string> ?
+    : Instruction extends Prefix<infer P2 extends string> ?
       Parts extends [...infer Prev, Prefix<infer P1 extends string>] ?
         RE<[Prefix<`${P1}${P2}`>, ...Prev], Captures, NamedCaptures>
       : RE<[...Parts, Instruction], Captures, NamedCaptures>
     : Instruction extends Group<any, any> ? _ReduceGroup<State, Instruction>
     : Instruction extends Quantifier<any, any> ?
       Parts extends [...infer Prev, infer P] ?
-        RE<[...Prev, Repeat<P, Instruction>], Captures, NamedCaptures>
+        P extends Repeat<any, any> ?
+          { error: "illegal quantifier after quantifier" } // TODO: implement laziness
+        : RE<[...Prev, Repeat<P, Instruction>], Captures, NamedCaptures>
       : never
     : RE<[...Parts, Instruction], Captures, NamedCaptures>
-  : { error: "~"; state: State };
+  : { error: "~"; state: State }; // FIXME: improve error message
 
 /** meta-type: string => RE | { error: string } */
 export type Compile<Src extends string, State = RE<[]>> =
@@ -461,6 +462,7 @@ type _Exec<State, Instructions extends [...unknown[]], Str extends string> =
     : never
   : never;
 
+/** meta-type: <RE, Str, [..], {..}> => [Err | [] & {}, rest_of_string] */
 type Exec<
   R extends RE<any, any, any>,
   Str extends string,
@@ -473,12 +475,63 @@ type Exec<
     Instruction extends Prefix<infer P extends string> ?
       Str extends `${P}${infer After}` ?
         Exec<R, After, [...Matches, P], NamedCaptureValues>
-      : never // TODO: raise an error
-    : never
-  : never;
+      : [{ error: `string does not match prefix`; str: Str; prefix: P }, Str]
+    : Instruction extends (
+      Group<infer Pattern extends RE<any, any, any>, infer Name>
+    ) ?
+      // TODO: factor into sub-type
+      Exec<Pattern, Str> extends [infer M, infer Rest extends string] ?
+        M extends { error: any } ? [M, Rest]
+        : M extends readonly [...string[]] ?
+          Exec<
+            R,
+            Rest,
+            [...Matches, JoinTuple<M>],
+            NamedCaptureValues &
+              (Name extends string ? { [K in Name]: JoinTuple<M> } : {})
+          >
+        : [
+            {
+              error: "unreachable: Exec<_> must return [string[] | , string]";
+            },
+            Str,
+          ]
+      : { error: "unreachable: unknown instruction" }
+    : { error: "?" }
+  : { error: "???" };
+
+{
+  type MyRegex = Compile<"a(b)">;
+  type Actual = Exec<MyRegex, "ab">;
+  const _: Eq<Actual, [["a", "b"], ""]> = true;
+}
+{
+  type MyRegex = Compile<"a(?<B>b)c">;
+  type Actual = Exec<MyRegex, "abc">;
+  const _: Eq<Actual, [["a", "b", "c"] & { B: "b" }, ""]> = true;
+}
 
 {
   type MyRegex = Compile<"a">;
-  type Actual = Exec<MyRegex, "ab">;
-  const _: Eq<Actual, [["a"], "b"]> = true;
+  {
+    type Actual = Exec<MyRegex, "ab">;
+    const _: Eq<Actual, [["a"], "b"]> = true;
+  }
+  {
+    type Actual = Exec<MyRegex, "bc">;
+    const _: Eq<
+      Actual,
+      [{ error: "string does not match prefix"; str: "bc"; prefix: "a" }, "bc"]
+    > = true;
+  }
+}
+
+type JoinTuple<T extends readonly [...string[]]> =
+  T extends [infer Head extends string, ...infer Tail extends string[]] ?
+    `${Head}${JoinTuple<Tail>}`
+  : "";
+
+{
+  type Actual = JoinTuple<["a", "b", "c"]>;
+  const _: Eq<Actual, "abc"> = true;
 }
