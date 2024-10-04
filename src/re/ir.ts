@@ -1,5 +1,7 @@
 // export type Noop = { noop: true };
 export type Prefix<Prefix extends string> = { prefix: Prefix };
+export type CaptureRef<Index extends number> = { captureRef: Index };
+/** Matches a single character */
 export type Union<
   Union extends string = never,
   Avoid extends string = never,
@@ -22,3 +24,5 @@ export type Quantifier<Min extends number, Max extends number | null = null> = {
 export type Star = Quantifier<0>;
 export type Plus = Quantifier<1>;
 export type Optional = Quantifier<0, 1>;
+
+export type Err<Msg extends string> = { error: Msg };
