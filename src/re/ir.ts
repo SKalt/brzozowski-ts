@@ -29,7 +29,7 @@ export type Optional = Quantifier<0, 1>;
 export type Err<Msg extends string> = { error: Msg };
 
 export type Group<
-  Pattern extends RE<any, string> = RE<[]>,
+  Pattern extends RE<any, any, any> = RE<[]>,
   Name extends string | null = null,
   Kind extends GroupKind = GroupKind.Capturing,
 > = {
@@ -39,19 +39,27 @@ export type Group<
 };
 
 export const enum GroupKind {
+  /** e.g. `(:?a)` */
   NonCapturing,
+  /** e.g. `(a)` or `(?<A>a)` */
   Capturing,
-  Lookahead,
+  /** e.g. `(?=a)` */
+  PositiveLookahead,
+  /** e.g. `(?!a)` */
   NegativeLookahead,
-  Lookbehind,
+  /** e.g. `(?<=a)` */
+  PositiveLookbehind,
+  /** e.g. `(?<!a)` */
   NegativeLookbehind,
 }
 
 export type RE<
   Parts extends readonly [...unknown[]],
+  Captures extends readonly [...number[]] = [],
   CaptureNames extends string = never,
 > = {
   parts: Parts;
+  captures: Captures;
   names: CaptureNames;
 };
 
