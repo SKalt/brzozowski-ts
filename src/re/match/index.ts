@@ -1,4 +1,4 @@
-import { Eq } from "../../utils";
+import { BuildTuple, Eq, TupleGTE } from "../../utils";
 import {
   Err,
   Group,
@@ -8,6 +8,8 @@ import {
   GroupKind,
   Alternation,
   CaptureRef,
+  Repeat,
+  Quantifier,
 } from "../ir";
 import { Compile } from "../re";
 
@@ -44,8 +46,71 @@ type _Derivative<Str extends string, Prefix extends string> =
   type Actual = _Derivative<"abc", "a" | "b">;
   const _: Eq<Actual, _Match<"a", "bc">> = true;
 }
+type _JoinMatches<
+  T extends readonly [...unknown[]],
+  Joined extends string = "",
+> =
+  T extends [] ? Joined
+  : T extends [_Match<infer Matched, any>, ...infer Tail] ?
+    _JoinMatches<Tail, `${Joined}${Matched}`>
+  : Err<"unreachable: _Match required"> & { n: T };
 
-type __ExecCharUnion<
+{
+  type Actual = _JoinMatches<[_Match<"a", "bc">, _Match<"b", "c">]>;
+  const _: Eq<Actual, "ab"> = true;
+}
+/** => _REmatch */
+type _RepeatDone<
+  Str extends string,
+  N extends
+    | readonly [..._Match<any, any>[]]
+    | readonly [..._REMatch<any, any, any, any>[]],
+> =
+  N extends [] ? _REMatch<"", Str>
+  : _JoinMatches<N> extends infer Matched extends string ?
+    Str extends `${Matched}${infer Rest}` ?
+      N extends [_REMatch<any, any, any, any>, ...infer _] ?
+        _REMatch<Matched, Rest, N[0]["captures"], N[0]["namedCaptures"]>
+      : _Match<Matched, Rest>
+    : Err<"unreachable: string does not match prefix"> & {
+        _matched: Matched;
+        str: Str;
+      }
+  : Err<"unreachable: _JoinMatches must return string">;
+
+type _ExecRepeat<
+  I,
+  Q extends Quantifier<any, any>,
+  Str extends string,
+  Captures extends readonly [...string[]],
+  Matched extends string = "",
+  N extends
+    | readonly [..._Match<any, any>[]]
+    | [..._REMatch<any, any, any, any>[]] = [],
+> =
+  N["length"] extends Q["max"] ? _RepeatDone<Str, N>
+  : Str extends `${Matched}${infer Rest}` ?
+    _Exec<I, Rest, Captures> extends infer M ?
+      M extends Err<any> ?
+        TupleGTE<N, BuildTuple<Q["min"]>> extends true ?
+          _RepeatDone<Str, N>
+        : M & { _n: N } // fail
+      : M extends _Match<any, any> ?
+        M["matched"] extends "" ?
+          _RepeatDone<Str, N> // TODO: ?
+        : _ExecRepeat<
+            I,
+            Q,
+            Str,
+            Captures,
+            `${Matched}${M["matched"]}`,
+            [...N, M]
+          >
+      : Err<"unreachable"> & { m: M }
+    : never
+  : Err<"unreachable"> & { cause: "infallible" };
+
+type _ExecCharUnion<
   Str extends string,
   Match extends string,
   Avoid extends string,
@@ -67,23 +132,23 @@ type __ExecCharUnion<
   : never;
 
 {
-  type Actual = __ExecCharUnion<"abc", "a" | "b", never>;
+  type Actual = _ExecCharUnion<"abc", "a" | "b", never>;
   const _: Actual extends _Match<"a", "bc"> ? true : false = true;
 }
 {
-  type Actual = __ExecCharUnion<"abc", never, never>;
+  type Actual = _ExecCharUnion<"abc", never, never>;
   const _: Actual extends Err<"empty union"> ? true : false = true;
 }
 {
-  type Actual = __ExecCharUnion<"xbc", never, "a">;
+  type Actual = _ExecCharUnion<"xbc", never, "a">;
   const _: Eq<Actual, _Match<"x", "bc">> = true;
 }
 {
-  type Actual = __ExecCharUnion<"bc", never, "a">;
+  type Actual = _ExecCharUnion<"bc", never, "a">;
   const _: Actual extends _Match<"b", "c"> ? true : false = true;
 }
 {
-  type Actual = __ExecCharUnion<"bc", "a", "b">;
+  type Actual = _ExecCharUnion<"bc", "a", "b">;
 }
 
 type _ExecAlt<
@@ -104,13 +169,25 @@ type _ExecGroup<
   Pattern extends RE<any, any, any>,
   Kind extends GroupKind,
   Captures extends readonly [...string[]],
-  // FIXME: NamedCaptures
+  // NamedCaptures get joined with the parent's namedCaptures, so passing them down is unnecessary
   Str extends string,
 > =
   Kind extends GroupKind.Capturing ?
     Exec<Pattern, Str, [], Captures> extends infer M ?
       M extends Err<any> ? M
-      : M extends _REMatch<any, any, any, any> ? M
+      : M extends _REMatch<any, any, any, any> ?
+        Kind extends GroupKind.Capturing ?
+          M["captures"] extends (
+            [...Captures, ...infer SubCaptures extends string[]]
+          ) ?
+            _REMatch<
+              M["matched"],
+              M["rest"],
+              [...Captures, M["matched"], ...SubCaptures],
+              M["namedCaptures"]
+            >
+          : never
+        : M
       : Err<"unreachable: Exec<_> must return _REmatch | Err">
     : never
   : Err<"unsupported group kind"> & { kind: Kind };
@@ -124,7 +201,13 @@ type _Exec<
 > =
   Instruction extends Prefix<infer P> ? _Derivative<Str, P>
   : Instruction extends CharUnion<infer MatchChars, infer AvoidChars> ?
-    __ExecCharUnion<Str, MatchChars, AvoidChars>
+    _ExecCharUnion<Str, MatchChars, AvoidChars>
+  : Instruction extends Alternation<infer Branches> ?
+    _ExecAlt<Branches, Str, Captures>
+  : Instruction extends CaptureRef<infer Index> ?
+    _Derivative<Str, ["", ...Captures][Index]> // <- "" is a placeholder for the 0th capture, which can't be referenced
+  : Instruction extends Repeat<infer I, infer Q> ?
+    _ExecRepeat<I, Q, Str, Captures, "", []>
   : Instruction extends Group<infer Pattern, infer Name, infer Kind> ?
     _ExecGroup<Pattern, Kind, Captures, Str> extends infer Result ?
       Result extends Err<any> ? Result
@@ -133,7 +216,7 @@ type _Exec<
           _REMatch<
             Result["matched"],
             Result["rest"],
-            [...Result["captures"], Result["matched"]], // FIXME: handle nested captures
+            Result["captures"],
             NamedCaptures &
               Result["namedCaptures"] &
               (Name extends string ? { [K in Name]: Result["matched"] } : {})
@@ -146,10 +229,6 @@ type _Exec<
           >
       : Err<"unreachable: _ExecGroup must return _REMatch | Err">
     : never
-  : Instruction extends Alternation<infer Branches> ?
-    _ExecAlt<Branches, Str, Captures>
-  : Instruction extends CaptureRef<infer Index> ?
-    _Derivative<Str, ["", ...Captures][Index]> // <- "" is a placeholder for the 0th capture, which can't be referenced
   : Err<"unsupported instruction"> & { instruction: Instruction };
 
 /** meta-type: <RE, Str, [..], {..}> => _REmatch */
@@ -175,14 +254,18 @@ type Exec<
         >
       : Result extends _Match<infer Matched, infer Rest> ?
         Exec<R, Rest, [...Matches, Matched], Captures, NamedCaptures>
-      : Err<"unreachable: _Exec must return _Match | _REMatch | Err">
+      : Err<"unreachable: _Exec must return _Match | _REMatch | Err"> & {
+          __result: Result;
+        }
     : never
   : never;
 
 {
-  type MyRegex = Compile<"(a(b))">;
-  type Actual = Exec<MyRegex, "abc">;
-  const _: Eq<Actual, _REMatch<"ab", "c", ["ab", "b"]>> = true;
+  type MyRegex = Compile<"(a(b(c))(d))">;
+  //                    0 --~~~~~~----
+  //                          2    3
+  type Actual = Exec<MyRegex, "abcd">;
+  const _: Eq<Actual, _REMatch<"abcd", "", ["abcd", "bc", "c", "d"]>> = true;
 }
 {
   type MyRegex = Compile<"a(b)">;
@@ -216,6 +299,18 @@ type Exec<
 
 {
   type MyRegex = Compile<"a|b">;
+  {
+    type Actual = Exec<MyRegex, "a">;
+    const _: Eq<Actual, _REMatch<"a", "", []>> = true;
+  }
+  {
+    type Actual = Exec<MyRegex, "b">;
+    const _: Eq<Actual, _REMatch<"b", "", []>> = true;
+  }
+  {
+    type Actual = Exec<MyRegex, "c">;
+    const _: Eq<Actual, { error: "no branches match" }> = true;
+  }
 }
 {
   type MyRegex = Compile<"a.c">;
@@ -244,4 +339,65 @@ type JoinTuple<T extends readonly [...string[]]> =
 {
   type Actual = JoinTuple<["a", "b", "c"]>;
   const _: Eq<Actual, "abc"> = true;
+}
+
+{
+  type MyRegex = Compile<"a{2,3}">;
+  {
+    const ok: Exec<MyRegex, "aaa">["matched"] = "aaa";
+  }
+  {
+    const ok: Exec<MyRegex, "aaaa">["matched"] = "aaa";
+  }
+  {
+    const ok: Exec<MyRegex, "aa">["matched"] = "aa";
+  }
+  {
+    const ok: Exec<MyRegex, "a">["error"] = "string does not match prefix";
+  }
+}
+{
+  type MyRegex = Compile<"a+?">;
+  {
+    const ok: Exec<MyRegex, "aa">["matched"] = "a";
+  }
+  {
+    const ok: Exec<MyRegex, "aaa">["matched"] = "a";
+  }
+  {
+    const ok: Exec<MyRegex, "">["error"] = "string does not match prefix";
+  }
+}
+{
+  type MyRegex = Compile<"a*?">;
+  {
+    const ok: Exec<MyRegex, "aa">["matched"] = "";
+  }
+  {
+    const ok: Exec<MyRegex, "aaa">["matched"] = "";
+  }
+  {
+    const ok: Exec<MyRegex, "">["matched"] = "";
+  }
+}
+{
+  type MyRegex = Compile<"a?b">;
+  {
+    const ok: Exec<MyRegex, "ab">["matched"] = "ab";
+  }
+  {
+    const ok: Exec<MyRegex, "b">["matched"] = "b";
+  }
+  {
+    const ok: Exec<MyRegex, "a">["error"] = "string does not match prefix";
+  }
+}
+
+{
+  type MyRegex = Compile<"A+">;
+  type Result = Exec<
+    MyRegex,
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  >;
+  const ok: "matched" extends keyof Result ? true : false = true;
 }

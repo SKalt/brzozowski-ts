@@ -187,7 +187,10 @@ type _ReduceGroup<
         CaptureNames | _capture_names
       > & { __kind: Kind; _captures: _captures }
   : Err<"unreachable: G must be a Group<_>">;
-
+type _Lazy<R extends Repeat<any, any>> = Repeat<
+  R["instruction"],
+  Quantifier<R["quantifier"]["min"], R["quantifier"]["min"]>
+>;
 /** meta-type: => RE | Err */
 type Reduce<State extends RE<any, any, any> | Err<any>, Instruction> =
   State extends Err<any> ? State
@@ -227,7 +230,9 @@ type Reduce<State extends RE<any, any, any> | Err<any>, Instruction> =
       : Instruction extends Quantifier<any, any> ?
         Parts extends [...infer Prev, infer P] ?
           P extends Repeat<any, any> ?
-            { error: "illegal quantifier after quantifier" } // TODO: implement laziness
+            Instruction extends Optional ?
+              RE<[...Prev, _Lazy<P>], Captures, CaptureNames>
+            : { error: "illegal quantifier after quantifier" }
           : RE<[...Prev, Repeat<P, Instruction>], Captures, CaptureNames>
         : never
       : Instruction extends "|" ?
