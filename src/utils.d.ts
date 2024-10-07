@@ -33,3 +33,8 @@ export type TupleGTE<
   : I["length"] extends A["length"] ? false
   : I["length"] extends B["length"] ? true
   : TupleGTE<A, B, [...I, I["length"]]>;
+
+export type JoinTuple<T extends readonly [...string[]]> =
+  T extends [infer Head extends string, ...infer Tail extends string[]] ?
+    `${Head}${JoinTuple<Tail>}`
+  : "";

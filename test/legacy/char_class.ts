@@ -1,7 +1,7 @@
-import { DeriveWRTRegExp, IsCompleteMatch } from "../src";
-import { AsciiLowercase, Digit } from "../src/char";
-import { CharClass } from "../src/internal";
-import { Eq } from "../src/utils";
+import { DeriveWRTRegExp, IsCompleteMatch } from "../../src";
+import { AsciiLowercase, Digit } from "../../src/char";
+import { CharClass } from "../../src/internal";
+import { Eq } from "../../src/utils";
 
 {
   type Actual = CharClass<"abc">;

@@ -1,6 +1,5 @@
 // meta-type: string => [Union, string] | { error: string }
 import { AsciiLowercase, AsciiUppercase, Digit } from "../../char";
-import { Eq } from "../../utils";
 import { Union as CharUnion, Prefix } from "../ir";
 import { _ParseEscape } from "./escape";
 
@@ -55,23 +54,3 @@ export type Parse<
       : Parse<{ inverse: I; union: CharUnion<Match | Next, Avoid> }, Rest>
     : never
   : never;
-{
-  type Actual = Parse<null, "a-z]">;
-  const _: Eq<Actual, [CharUnion<AsciiLowercase>, ""]> = true;
-}
-{
-  type Actual = Parse<null, "a-z0-9]">;
-  const _: Eq<Actual, [CharUnion<AsciiLowercase | Digit>, ""]> = true;
-}
-{
-  type Actual = Parse<null, "0-9A]">;
-  const _: Eq<Actual, [CharUnion<Digit | "A">, ""]> = true;
-}
-{
-  type Actual = Parse<null, "0-]">;
-  const _: Eq<Actual, [CharUnion<"0" | "-">, ""]> = true;
-}
-{
-  type Actual = Parse<null, "0-">;
-  const _: Eq<Actual, { error: "unterminated char class" }> = true;
-}

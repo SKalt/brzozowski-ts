@@ -1,6 +1,6 @@
-import { Many0, Many1 } from "../src/internal";
-import { Digit } from "../src/char";
-import { Eq } from "../src/utils";
+import { Many0, Many1 } from "../../src/internal";
+import { Digit } from "../../src/char";
+import { Eq } from "../../src/utils";
 
 {
   type Actual = Many0<"a", "aab">;

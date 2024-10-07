@@ -1,5 +1,5 @@
-import type { IsCompleteMatch } from "../src/index";
-import type { Eq } from "../src/utils";
+import type { IsCompleteMatch } from "../../src/index";
+import type { Eq } from "../../src/utils";
 type IsHexStr<S extends string> = IsCompleteMatch<`[\\dabcdef]+`, S>;
 {
   const abcIsHex: Eq<IsHexStr<"0123456789abcdef">, true> = true;

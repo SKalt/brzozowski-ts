@@ -1,5 +1,5 @@
-import { DeriveWRTRegExp } from "../src";
-import { Eq } from "../src/utils";
+import { DeriveWRTRegExp } from "../../src";
+import { Eq } from "../../src/utils";
 
 {
   type Actual = DeriveWRTRegExp<".", "a">;

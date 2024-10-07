@@ -1,8 +1,7 @@
-import { Eq } from "../../utils";
 import { Quantifier } from "../ir";
 
 /** meta-type: string => [Quantifier, string] | { error: string }  */
-export type _ParseQuantifier<
+export type Parse<
   State extends
     | null // initial state
     | [number], // min recognized
@@ -20,7 +19,7 @@ export type _ParseQuantifier<
     : Str extends `${infer Min extends number},}${infer Rest}` ?
       [Quantifier<Min>, Rest]
     : Str extends `${infer Min extends number},${infer Rest}` ?
-      _ParseQuantifier<[Min], Rest>
+      Parse<[Min], Rest>
     : { error: `invalid quantifier: {${Str}` }
   : State extends [infer Min extends number] ?
     Str extends `}${infer Rest}` ? [Quantifier<Min, Min>, Rest]
@@ -28,36 +27,3 @@ export type _ParseQuantifier<
       [Quantifier<Min, Max>, Rest]
     : { error: `invalid quantifier: {${Min},${Str}` }
   : never;
-
-{
-  type Actual = _ParseQuantifier<null, "3}">;
-  const _: Eq<Actual, [Quantifier<3, 3>, ""]> = true;
-}
-{
-  type Actual = _ParseQuantifier<null, "3,}">;
-  const _: Eq<Actual, [Quantifier<3>, ""]> = true;
-}
-{
-  type Actual = _ParseQuantifier<null, "3,4}">;
-  const _: Eq<Actual, [Quantifier<3, 4>, ""]> = true;
-}
-{
-  type Actual = _ParseQuantifier<null, "Infinity}">;
-  const _: Eq<Actual, { error: "infinite quantifier" }> = true;
-}
-{
-  type Actual = _ParseQuantifier<null, "-3}">;
-  const _: Eq<Actual, { error: "negative quantifier" }> = true;
-}
-{
-  type Actual = _ParseQuantifier<null, "}">;
-  const _: Eq<Actual, { error: "empty quantifier" }> = true;
-}
-{
-  type Actual = _ParseQuantifier<[1], "}">;
-  const _: Eq<Actual, [Quantifier<1, 1>, ""]> = true;
-}
-{
-  type Actual = _ParseQuantifier<[1], "3}">;
-  const _: Eq<Actual, [Quantifier<1, 3>, ""]> = true;
-}

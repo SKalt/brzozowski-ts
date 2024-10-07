@@ -1,5 +1,5 @@
-import { Opt } from "../src/internal";
-import { Eq } from "../src/utils";
+import { Opt } from "../../src/internal";
+import { Eq } from "../../src/utils";
 {
   const _o0: Eq<Opt<"x", "abc">, "abc"> = true;
   const _o1: Eq<Opt<"a", "abc">, "bc"> = true;
