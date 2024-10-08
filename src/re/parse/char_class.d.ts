@@ -1,5 +1,5 @@
 // meta-type: string => [Union, string] | { error: string }
-import { AsciiLowercase, AsciiUppercase, Digit } from "../../char";
+import { AsciiLowercase, AsciiUppercase, Digit, FindRange } from "../../char";
 import { Union as CharUnion, Err, Prefix } from "../ir";
 import { _ParseEscape } from "./escape";
 
@@ -8,7 +8,11 @@ type _ParseCharRange<Start extends string, End extends string> =
   [Start, End] extends ["a", "z"] ? CharUnion<AsciiLowercase, never>
   : [Start, End] extends ["A", "Z"] ? CharUnion<AsciiUppercase, never>
   : [Start, End] extends ["0", "9"] ? CharUnion<Digit, never>
-  : { error: "unsupported char range"; start: Start; end: End };
+  : FindRange<Start, End> extends infer Range ?
+    Range extends Err<any> ? Range
+    : Range extends string ? CharUnion<Range, never>
+    : Err<"unreachable: FindRange must return string | Err">
+  : Err<"unreachable: infallible infer">;
 
 type _State<Inverse extends boolean, U extends CharUnion<any, any>> = {
   inverse: Inverse;
