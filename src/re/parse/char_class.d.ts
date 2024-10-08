@@ -1,13 +1,13 @@
 // meta-type: string => [Union, string] | { error: string }
 import { AsciiLowercase, AsciiUppercase, Digit } from "../../char";
-import { Union as CharUnion, Prefix } from "../ir";
+import { Union as CharUnion, Err, Prefix } from "../ir";
 import { _ParseEscape } from "./escape";
 
 /** meta-type: string => CharUnion | { error: string } */
 type _ParseCharRange<Start extends string, End extends string> =
-  [Start, End] extends ["a", "z"] ? CharUnion<AsciiLowercase>
-  : [Start, End] extends ["A", "Z"] ? CharUnion<AsciiUppercase>
-  : [Start, End] extends ["0", "9"] ? CharUnion<Digit>
+  [Start, End] extends ["a", "z"] ? CharUnion<AsciiLowercase, never>
+  : [Start, End] extends ["A", "Z"] ? CharUnion<AsciiUppercase, never>
+  : [Start, End] extends ["0", "9"] ? CharUnion<Digit, never>
   : { error: "unsupported char range"; start: Start; end: End };
 
 type _State<Inverse extends boolean, U extends CharUnion<any, any>> = {
@@ -25,8 +25,8 @@ export type Parse<
   : State extends null ?
     Str extends `]${infer _}` ? { error: "empty char class: []" }
     : Str extends `^${infer Rest extends string}` ?
-      Parse<{ inverse: true; union: CharUnion }, Rest>
-    : Parse<{ inverse: false; union: CharUnion }, Str>
+      Parse<{ inverse: true; union: CharUnion<never, never> }, Rest>
+    : Parse<{ inverse: false; union: CharUnion<never, never> }, Str>
   : State extends _State<infer I, CharUnion<infer Match, infer Avoid>> ?
     Str extends `]${infer Rest}` ?
       I extends true ?
@@ -41,7 +41,7 @@ export type Parse<
         : Instruction extends CharUnion<infer Match2, infer Avoid2> ?
           Parse<_State<I, CharUnion<Match | Match2, Avoid | Avoid2>>, Remainder>
         : [I, Remainder] // I must be error
-      : never
+      : Err<"unreachable: _ParseEscape must return [any, string]">
     : Str extends `${infer Next extends string}${infer Rest}` ?
       Rest extends `-${infer End extends string}${infer Remainder}` ?
         End extends "]" ?
@@ -52,5 +52,5 @@ export type Parse<
           Parse<_State<I, CharUnion<Match | Match2, Avoid | Avoid2>>, Remainder>
         : _ParseCharRange<Next, End> // err
       : Parse<{ inverse: I; union: CharUnion<Match | Next, Avoid> }, Rest>
-    : never
-  : never;
+    : Err<"unreachable: Str must be empty or have at least 1 character">
+  : Err<"unreachable: State must be null | _State">;

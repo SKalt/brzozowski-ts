@@ -23,8 +23,8 @@ export type _ExecGroup<
               [...Captures, M["matched"], ...SubCaptures],
               M["namedCaptures"]
             >
-          : never
+          : Err<"unreachable: if M is a capturing group, captures must have at least 1 element">
         : M
       : Err<"unreachable: Exec<_> must return _REmatch | Err">
-    : never
+    : Err<"unreachable: infallible infer">
   : Err<"unsupported group kind"> & { kind: Kind };

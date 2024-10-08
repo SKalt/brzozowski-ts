@@ -28,9 +28,11 @@ export type Optional = Quantifier<0, 1>;
 
 export type Err<Msg extends string> = { error: Msg };
 
+/** sentinel value: name can never be empty */
+type Anonymous = "";
 export type Group<
   Pattern extends RE<any, any, any> = RE<[]>,
-  Name extends string | null = null,
+  Name extends string = Anonymous,
   Kind extends GroupKind = GroupKind.Capturing,
 > = {
   kind: Kind;

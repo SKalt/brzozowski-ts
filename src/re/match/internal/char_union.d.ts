@@ -20,5 +20,5 @@ export type _ExecCharUnion<
           match_chars: Match;
           avoid_chars: Avoid;
         }
-    : never
-  : never;
+    : Err<"unreachable: infallible infer">
+  : Err<"unreachable: Str must either be empty or have at least 1 character">;

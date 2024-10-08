@@ -54,8 +54,8 @@ export type _Exec<
           Result["captures"],
           NamedCaptures &
             Result["namedCaptures"] &
-            (Name extends string ? { [K in Name]: Result["matched"] } : {})
+            (Name extends "" ? {} : { [K in Name]: Result["matched"] })
         >
       : Err<"unreachable: _ExecGroup must return _REMatch | Err">
-    : never
+    : Err<"unreachable: infallible infer">
   : Err<"unsupported instruction"> & { instruction: Instruction };

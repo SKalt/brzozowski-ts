@@ -59,5 +59,5 @@ type _ExecRepeat<
             [...N, M]
           >
       : Err<"unreachable"> & { m: M }
-    : never
-  : Err<"unreachable"> & { cause: "infallible" };
+    : Err<"unreachable: infallible infer">
+  : Err<"unreachable: Str must never be empty"> & { str: Str };

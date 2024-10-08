@@ -1,4 +1,4 @@
-import { Quantifier } from "../ir";
+import { Err, Quantifier } from "../ir";
 
 /** meta-type: string => [Quantifier, string] | { error: string }  */
 export type Parse<
@@ -25,5 +25,5 @@ export type Parse<
     Str extends `}${infer Rest}` ? [Quantifier<Min, Min>, Rest]
     : Str extends `${infer Max extends number}}${infer Rest}` ?
       [Quantifier<Min, Max>, Rest]
-    : { error: `invalid quantifier: {${Min},${Str}` }
-  : never;
+    : Err<`invalid quantifier`> & { qualifier: `${Min},${Str}` }
+  : Err<"unreachable: State must be null | [number]"> & { state: State };

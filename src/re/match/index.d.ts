@@ -33,5 +33,5 @@ export type Exec<
       : Err<"unreachable: _Exec must return _Match | _REMatch | Err"> & {
           __result: Result;
         }
-    : never
-  : never;
+    : Err<"unreachable: infallible infer">
+  : Err<"unreachable: Matches['length'] must be less than or equal to R['parts']">;

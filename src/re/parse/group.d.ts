@@ -1,10 +1,7 @@
 import { Err, Group, GroupKind, RE } from "../ir";
 import { Compile } from "../compile";
 
-export type _GroupMeta<
-  Kind extends GroupKind,
-  Name extends string | null = null,
-> = {
+export type _GroupMeta<Kind extends GroupKind, Name extends string = ""> = {
   kind: Kind;
   name: Name;
 };
@@ -44,15 +41,26 @@ export type _ParseGroup<
         [_GroupMeta<infer Kind, infer Name>, infer Rest extends string]
       ) ?
         _ParseGroup<Rest, Group<RE<[]>, Name, Kind>, Stack>
-      : never
-    : never
+      : Err<"unreachable: _ParseGroupMeta must result in either [_, string] | Err">
+    : Err<"unreachable: infallible infer">
   : State extends Group<infer Pattern, infer Name, infer Kind> ?
     Compile<Str, Pattern, Stack> extends infer M ?
       M extends Err<any> ? M
       : M extends [infer S, infer Rest extends string] ?
         S extends RE<any, any, any> ?
           [Group<S, Name, Kind>, Rest]
-        : Err<"1"> // FIXME: better error names
-      : Err<"2"> & { m: M }
-    : Err<"3">
-  : Err<"4"> & { str: Str; state: State } & { stack: Stack };
+        : Err<"unreachable: Compile[0] must be a RE"> & {
+            s: S;
+            m: M;
+            state: State;
+            str: Str;
+          }
+      : Err<"unreachable: Compile must result in either [_, string] | Err"> & {
+          m: M;
+        }
+    : Err<"unreachable: infallible infer">
+  : Err<"unreachable: State must be null | Group<_>"> & {
+      str: Str;
+      state: State;
+      stack: Stack;
+    };

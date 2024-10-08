@@ -2,7 +2,6 @@ import { Digit, Word } from "../char";
 import { _CheckFinite } from "../internal";
 import { BuildTuple, Eq, TupleGTE } from "../utils";
 import type {
-  Union as CharUnion,
   Prefix,
   Quantifier,
   Plus,
@@ -30,7 +29,7 @@ type _ReduceGroup<
 > =
   G extends (
     Group<
-      RE<infer _parts, infer _captures, infer _capture_names>,
+      RE<any, infer _captures, infer _capture_names>,
       infer Name,
       infer Kind
     >
@@ -40,6 +39,8 @@ type _ReduceGroup<
         error: `duplicate capture name`;
         name: Name;
         names: CaptureNames | _capture_names;
+        is_str: Name extends string ? true : false;
+        is_null: Name extends null ? true : false;
       }
     : Eq<CaptureNames & _capture_names, never> extends false ?
       {
@@ -47,22 +48,16 @@ type _ReduceGroup<
         duplicate: CaptureNames & _capture_names;
       }
     : Kind extends GroupKind.Capturing ?
-      Name extends string ?
-        RE<
-          [...Parts, G],
-          [...Captures, Captures["length"], ..._captures],
-          CaptureNames | _capture_names | Name
-        >
-      : RE<
-          [...Parts, G],
-          [...Captures, Captures["length"], ..._captures],
-          CaptureNames | _capture_names
-        >
+      RE<
+        [...Parts, G],
+        [...Captures, Captures["length"], ..._captures],
+        CaptureNames | _capture_names | (Name extends "" ? never : Name)
+      >
     : RE<
         [...Parts, G],
         [...Captures, ..._captures],
         CaptureNames | _capture_names
-      > & { __kind: Kind; _captures: _captures }
+      >
   : Err<"unreachable: G must be a Group<_>">;
 
 type _Lazy<R extends Repeat<any, any>> = Repeat<
@@ -74,17 +69,16 @@ type _Lazy<R extends Repeat<any, any>> = Repeat<
 type Reduce<State extends RE<any, any, any> | Err<any>, Instruction> =
   State extends Err<any> ? State
   : Instruction extends Err<any> ? Instruction
+  : State extends RE<[], [], never> ?
+    Instruction extends Group<any, any> ?
+      _ReduceGroup<[], [], never, Instruction>
+    : Instruction extends Quantifier<any, any> ?
+      Err<"illegal quantifier at start">
+    : Instruction extends "|" ? Err<"illegal alternation at start">
+    : Instruction extends CaptureRef<any> ? Err<"illegal capture ref at start">
+    : RE<[Instruction]>
   : State extends RE<infer Parts, infer Captures, infer CaptureNames> ?
-    Parts extends [] ?
-      Instruction extends Group<any, any> ?
-        _ReduceGroup<Parts, Captures, CaptureNames, Instruction>
-      : Instruction extends Quantifier<any, any> ?
-        Err<"illegal quantifier at start">
-      : Instruction extends "|" ? Err<"illegal alternation at start">
-      : Instruction extends CaptureRef<any> ?
-        Err<"illegal capture ref at start">
-      : RE<[Instruction]>
-    : Parts extends [...infer Old, infer PrevInstruction] ?
+    Parts extends [...infer Old, infer PrevInstruction] ?
       PrevInstruction extends Alternation<infer Branches> ?
         Instruction extends "|" ?
           Err<"empty alternation branch">
@@ -113,22 +107,22 @@ type Reduce<State extends RE<any, any, any> | Err<any>, Instruction> =
               RE<[...Prev, _Lazy<P>], Captures, CaptureNames>
             : { error: "illegal quantifier after quantifier" }
           : RE<[...Prev, Repeat<P, Instruction>], Captures, CaptureNames>
-        : never
+        : Err<"unreachable: Parts should only be empty if State is RE<[], [], {}>">
       : Instruction extends "|" ?
         RE<[...Old, Alternation<[PrevInstruction]>], Captures, CaptureNames>
       : RE<[...Parts, Instruction], Captures, CaptureNames>
-    : never
-  : Err<"unreachable: Parts must have 0 or 1+ elements">;
+    : Err<"unreachable: Parts must have 0 or 1+ elements">
+  : Err<"unreachable: State must be RE<[]> | RE<[..]> | Err">;
 
 /** meta-type: string => RE | { error: string } */
 export type Compile<
   Src extends string,
-  State extends RE<any, any, any> | Err<any> = RE<[]>,
+  State extends RE<any, any, any> | Err<any> = RE<[], [], never>,
   Stack extends readonly [...string[]] = [],
 > =
-  _CheckFinite<Src> extends { error: infer E } ? { error: E }
+  _CheckFinite<Src> extends Err<infer E> ? Err<E>
   : Src extends "" ?
-    State extends RE<[], any> ?
+    State extends RE<[], any, any> ?
       Stack extends [] ?
         Err<"empty pattern"> & { stack: Stack }
       : Err<"empty group">
@@ -160,11 +154,11 @@ export type Compile<
     : Next extends ")" ?
       Stack extends [] ?
         Err<"unmatched closing parenthesis"> & { state: State; stack: Stack }
-      : State extends RE<[]> ? Err<"empty group">
+      : State extends RE<[], any, any> ? Err<"empty group">
       : [State, After] // this closes a group!
     : Next extends "(" ?
       _ParseGroup<After> extends [infer I, infer Rest extends string] ?
         Compile<Rest, Reduce<State, I>, Stack>
-      : { error: "_ParseGroup panicked" }
+      : { error: "_ParseGroup panicked" } & { __result: _ParseGroup<After> }
     : Compile<After, Reduce<State, Prefix<Next>>, Stack>
   : Err<"n ever">;
