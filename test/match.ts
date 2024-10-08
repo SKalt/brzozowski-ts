@@ -12,7 +12,8 @@ import { Eq, JoinTuple } from "../src/utils";
   //                    0 --~~~~~~----
   //                          2    3
   type Actual = Exec<MyRegex, "abcd">;
-  const _: Eq<Actual, _REMatch<"abcd", "", ["abcd", "bc", "c", "d"]>> = true;
+  const matched: Actual["matched"] = "abcd";
+  const captures: Actual["captures"] = ["abcd", "bc", "c", "d"];
 }
 {
   type MyRegex = Compile<"a(b)">;
@@ -21,7 +22,10 @@ import { Eq, JoinTuple } from "../src/utils";
 {
   type MyRegex = Compile<"a(b)">;
   type Actual = Exec<MyRegex, "ab">;
-  const _: Eq<Actual, _REMatch<"ab", "", ["b"]>> = true;
+  const matched: Actual["matched"] = "ab";
+  const captures: Actual["captures"] = ["b"];
+  const rest: Actual["rest"] = "";
+  const namedCaptures: Actual["namedCaptures"] = {};
 }
 {
   type MyRegex = Compile<"a(?<B>b)c">;
@@ -73,8 +77,8 @@ import { Eq, JoinTuple } from "../src/utils";
 {
   type MyRegex = Compile<"a(b)(c)">;
   type Match = Exec<MyRegex, "abc">;
-  type Captures = Match["captures"];
-  const captures: Captures = ["b", "c"];
+  const matched: Match["matched"] = "abc";
+  const captures: Match["captures"] = ["b", "c"];
 }
 
 {

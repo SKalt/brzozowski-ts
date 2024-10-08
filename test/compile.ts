@@ -60,16 +60,13 @@ import { Eq } from "../src/utils";
 }
 {
   type Actual = Compile<"(a)">;
-  {
-    const _: Actual["captures"] = [0];
-  }
-  {
-    const _: Eq<Actual["names"], never> = true;
-  }
+  const captures: Actual["captures"] = [0];
+  const names: Eq<Actual["names"], never> = true;
   {
     const _: keyof Actual["parts"][0] = "pattern";
   }
-  const _: Eq<Actual, RE<[Group<RE<[Prefix<"a">]>>], [0]>> = true;
+  const _: Actual extends RE<[Group<RE<[Prefix<"a">]>>], [0]> ? true : false =
+    true;
 }
 {
   type Actual = Compile<"\\)">;

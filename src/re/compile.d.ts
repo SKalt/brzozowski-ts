@@ -1,6 +1,4 @@
-import { Digit, Word } from "../char";
-import { _CheckFinite } from "../internal";
-import { BuildTuple, Eq, TupleGTE } from "../utils";
+import { _CheckFinite, BuildTuple, Eq, TupleGTE } from "../utils";
 import type {
   Prefix,
   Quantifier,

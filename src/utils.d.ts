@@ -38,3 +38,6 @@ export type JoinTuple<T extends readonly [...string[]]> =
   T extends [infer Head extends string, ...infer Tail extends string[]] ?
     `${Head}${JoinTuple<Tail>}`
   : "";
+
+export type _CheckFinite<Str extends string> =
+  string extends Str ? { error: `${Str} is infinite` } : true;

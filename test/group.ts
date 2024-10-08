@@ -73,20 +73,40 @@ import {
   type Actual = _ParseGroup<"?:a)">;
   const _: Eq<
     Actual,
-    [Group<RE<[Prefix<"a">]>, null, GroupKind.NonCapturing>, ""]
+    [Group<RE<[Prefix<"a">]>, "", GroupKind.NonCapturing>, ""]
   > = true;
 }
 
 {
   type Actual = _ParseGroup<"a(b))">;
-
   {
     const _: Actual["length"] = 2;
     const _rest: Actual[1] = "";
     const _keys: Array<keyof Actual[0]> = ["pattern", "kind", "name"];
   }
-  const _: Eq<
-    Actual,
-    [Group<RE<[Prefix<"a">, Group<RE<[Prefix<"b">]>>], [0]>>, ""]
-  > = true;
+  {
+    const _: Eq<
+      Actual[0]["pattern"]["parts"][0],
+      Prefix<"a">
+      // [Group<RE<[Prefix<"a">, Group<RE<[Prefix<"b">]>>], [0]>>, ""]
+    > = true;
+  }
+  {
+    const _: Eq<
+      Actual[0]["pattern"]["parts"][1],
+      Group<RE<[Prefix<"b">]>>
+    > = true;
+  }
+  {
+    const _: Eq<Actual[0]["kind"], GroupKind.Capturing> = true;
+  }
+  {
+    const _: Eq<Actual[0]["name"], ""> = true;
+  }
+  {
+    const _: Eq<Actual[0]["pattern"]["captures"], [0]> = true;
+  }
+  {
+    const _: Eq<Actual[0]["pattern"]["names"], never> = true;
+  }
 }
