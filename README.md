@@ -11,7 +11,7 @@ This allows you to make assertions about constants:
 
 ```ts
 type HexStr<S extends string> =
-  RecognizePattern<"[0-9abcdef]+", S> extends true ? S
+  RecognizePattern<"[0-9a-fA-F]+", S> extends true ? S
   : `${S} is not a hex string`;
 
 const foo = <S extends string>(s: HexStr<S>): void => {};
@@ -21,16 +21,14 @@ foo("abz"); // error
 //         parameter of type '"abz is not a hex string"'
 ```
 
+<!-- TODO: note on integration with nominal typing -->
+
 ## Limitations
 
-- `RecognizePattern<RE, Str>` uses a **very** limited and poorly-implemented regular expression language:
-  - no alternation: `no|pe`
-  - only `a-z`, `A-Z`, and `0-9` are recognized in char class literals `[0-9a-zA-Z]`, no partial ranges like `a-f`
-  - no named capture groups: `(?<nope>)`
+- `RecognizePattern<RE, Str>` uses a limited and naively-implemented regular expression language:
   - no negative lookahead: `(?!nope)`
-  - no nested capture groups: `(no(pe))`
-  - no quantified repetition `[0-9]{3,6}`
-  - no partial matches: every pattern is implicitly total `/^always$/`
+  - matches always start from the start of the string: `/^always/`
+  - string recognition is implemented as a series of potentially-nested commands rather than state transitions within a finite automaton.
 - Using these types likely slows down builds
 <!-- TODO: quantify the cost of compile-time RegExp matching -->
 
