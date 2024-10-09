@@ -10,15 +10,18 @@ There has already been discussion of the use cases and potential API in the [Typ
 This allows you to make assertions about constants:
 
 ```ts
-type HexStr<S extends string> =
-  RecognizePattern<"[0-9a-fA-F]+", S> extends true ? S
-  : `${S} is not a hex string`;
+type HexStrRE = Compile<"(?<hex>[0-9A-Fa-f]{5,})">;
+type Match = Exec<HexStrRE, "abc123">;
+const captures: Match["captures"] = ["abc123"];
+const groups: Match["groups"] = { hex: "abc123" };
 
-const foo = <S extends string>(s: HexStr<S>): void => {};
-foo("abc"); // ok!
-foo("abz"); // error
-//   ~~~   Argument of type '"abz"' is not assignable to
-//         parameter of type '"abz is not a hex string"'
+type HexStr<S extends string> = Recognize<HexStrRE, S>;
+
+const mustBeHex = <S extends string>(hexStr: HexStr<S>) => hexStr;
+// OK! the return type is "abc123"
+const ok = mustBeHex("abc123");
+// @ts-expect-error
+mustBeHex("xyz q");
 ```
 
 <!-- TODO: note on integration with nominal typing -->
@@ -29,6 +32,9 @@ foo("abz"); // error
   - no negative lookahead: `(?!nope)`
   - matches always start from the start of the string: `/^always/`
   - string recognition is implemented as a series of potentially-nested commands rather than state transitions within a finite automaton.
+  - no flags:
+    - no case-insensitive matching: `/NOPE/i`
+    - no multiline mode: `nope$`
 - Using these types likely slows down builds
 <!-- TODO: quantify the cost of compile-time RegExp matching -->
 
