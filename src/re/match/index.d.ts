@@ -21,7 +21,7 @@ export type Exec<
           Result["rest"],
           [...Matches, Result["matched"]],
           Result["captures"],
-          Result["namedCaptures"]
+          Result["groups"]
         >
       : Result extends _Match<infer Matched, infer Rest> ?
         Exec<R, Rest, [...Matches, Matched], Captures, NamedCaptures>

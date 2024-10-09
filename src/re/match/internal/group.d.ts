@@ -21,7 +21,7 @@ export type _ExecGroup<
               M["matched"],
               M["rest"],
               [...Captures, M["matched"], ...SubCaptures],
-              M["namedCaptures"]
+              M["groups"]
             >
           : Err<"unreachable: if M is a capturing group, captures must have at least 1 element">
         : M

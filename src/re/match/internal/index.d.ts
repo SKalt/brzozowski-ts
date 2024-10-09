@@ -25,7 +25,7 @@ export type REMatch<
   NamedCaptures extends Record<string, string> = {},
 > = _Match<Matched, Rest> & {
   captures: Captures;
-  namedCaptures: NamedCaptures;
+  groups: NamedCaptures;
 };
 
 /** meta-type: => _REmatch | _Match | Err */
@@ -53,7 +53,7 @@ export type _Exec<
           Result["rest"],
           Result["captures"],
           NamedCaptures &
-            Result["namedCaptures"] &
+            Result["groups"] &
             (Name extends "" ? {} : { [K in Name]: Result["matched"] })
         >
       : Err<"unreachable: _ExecGroup must return _REMatch | Err">

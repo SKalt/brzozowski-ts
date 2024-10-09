@@ -22,7 +22,7 @@ type _RepeatDone<
   : _JoinMatches<N> extends infer Matched extends string ?
     Str extends `${Matched}${infer Rest}` ?
       N extends [REMatch<any, any, any, any>, ...infer _] ?
-        REMatch<Matched, Rest, N[0]["captures"], N[0]["namedCaptures"]>
+        REMatch<Matched, Rest, N[0]["captures"], N[0]["groups"]>
       : _Match<Matched, Rest>
     : Err<"unreachable: string does not match prefix"> & {
         _matched: Matched;

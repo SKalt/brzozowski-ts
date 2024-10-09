@@ -1,11 +1,15 @@
 import type { Compile, Exec } from "../src";
 import { Recognize } from "../src/re";
 
-type HexStrRE = Compile<"[0-9A-Fa-f]{5,}">;
+type HexStrRE = Compile<"(?<hex>[0-9A-Fa-f]{5,})">;
+type Match = Exec<HexStrRE, "abc123">;
+const captures: Match["captures"] = ["abc123"];
+const groups: Match["groups"] = { hex: "abc123" };
+
 type HexStr<S extends string> = Recognize<HexStrRE, S>;
-type nope = HexStr<"xxxxx">;
 
 const mustBeHex = <S extends string>(hexStr: HexStr<S>) => hexStr;
-mustBeHex("abc123"); // => "abc123"
-// @ts-expect-error: "${string}" is not a valid hex string
-mustBeHex("xyz q"); // => type error
+// OK! the return type is "abc123"
+const ok = mustBeHex("abc123");
+// @ts-expect-error
+mustBeHex("xyz q");

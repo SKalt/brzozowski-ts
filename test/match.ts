@@ -25,7 +25,7 @@ import { Eq, JoinTuple } from "../src/utils";
   const matched: Actual["matched"] = "ab";
   const captures: Actual["captures"] = ["b"];
   const rest: Actual["rest"] = "";
-  const namedCaptures: Actual["namedCaptures"] = {};
+  const namedCaptures: Actual["groups"] = {};
 }
 {
   type MyRegex = Compile<"a(?<B>b)c">;

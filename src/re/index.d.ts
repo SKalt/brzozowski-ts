@@ -18,10 +18,10 @@ export type RecognizePrefix<
   : Expr extends RE<any, any, any> ?
     Exec<Expr, Str> extends infer Result ?
       Result extends Err<any> ? Result
-      : Result extends REMatch<any, any> ? Result
-      : Err<"unreachable: Exec must return REMatch | Err">
+      : Result extends REMatch<any, any, any, any> ? Result
+      : Err<"unreachable: Exec must return REMatch | Err"> & { result: Result }
     : Err<"unreachable: infallible infer">
-  : Err<"unreachable: Expr must be string | RE">;
+  : Err<"unreachable: Expr must be string | RE"> & { expr: Expr };
 
 export type Recognize<
   Expr extends string | RE<any, any, any>,
