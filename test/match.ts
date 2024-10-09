@@ -1,5 +1,5 @@
 import { Exec } from "../src/re/match";
-import { _Match, _REMatch } from "../src/re/match/internal";
+import { _Match, REMatch } from "../src/re/match/internal";
 import { _JoinMatches } from "../src/re/match/internal/repeat";
 import { Compile } from "../src/re/compile";
 import { Eq, JoinTuple } from "../src/utils";
@@ -30,14 +30,14 @@ import { Eq, JoinTuple } from "../src/utils";
 {
   type MyRegex = Compile<"a(?<B>b)c">;
   type Actual = Exec<MyRegex, "abc">;
-  const _: Eq<Actual, _REMatch<"abc", "", ["b"], { B: "b" }>> = true;
+  const _: Eq<Actual, REMatch<"abc", "", ["b"], { B: "b" }>> = true;
 }
 
 {
   type MyRegex = Compile<"a">;
   {
     type Actual = Exec<MyRegex, "ab">;
-    const _: Eq<Actual, _REMatch<"a", "b">> = true;
+    const _: Eq<Actual, REMatch<"a", "b">> = true;
   }
   {
     type Actual = Exec<MyRegex, "bc">;
@@ -52,11 +52,11 @@ import { Eq, JoinTuple } from "../src/utils";
   type MyRegex = Compile<"a|b">;
   {
     type Actual = Exec<MyRegex, "a">;
-    const _: Eq<Actual, _REMatch<"a", "", []>> = true;
+    const _: Eq<Actual, REMatch<"a", "", []>> = true;
   }
   {
     type Actual = Exec<MyRegex, "b">;
-    const _: Eq<Actual, _REMatch<"b", "", []>> = true;
+    const _: Eq<Actual, REMatch<"b", "", []>> = true;
   }
   {
     type Actual = Exec<MyRegex, "c">;
@@ -66,13 +66,13 @@ import { Eq, JoinTuple } from "../src/utils";
 {
   type MyRegex = Compile<"a.c">;
   type Actual = Exec<MyRegex, "abc">;
-  const _: Eq<Actual, _REMatch<"abc", "">> = true;
+  const _: Eq<Actual, REMatch<"abc", "">> = true;
 }
 
 {
   type MyRegex = Compile<"a(b)\\1">;
   type Actual = Exec<MyRegex, "abb">;
-  const _: Eq<Actual, _REMatch<"abb", "", ["b"]>> = true;
+  const _: Eq<Actual, REMatch<"abb", "", ["b"]>> = true;
 }
 {
   type MyRegex = Compile<"a(b)(c)">;

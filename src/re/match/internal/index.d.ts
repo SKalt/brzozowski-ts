@@ -18,7 +18,7 @@ export type _Match<Matched extends string, Rest extends string> = {
   rest: Rest;
 };
 
-export type _REMatch<
+export type REMatch<
   Matched extends string,
   Rest extends string,
   Captures extends readonly [...string[]] = [],
@@ -47,8 +47,8 @@ export type _Exec<
   : Instruction extends Group<infer Pattern, infer Name, infer Kind> ?
     _ExecGroup<Pattern, Kind, Captures, Str> extends infer Result ?
       Result extends Err<any> ? Result
-      : Result extends _REMatch<any, any, any, any> ?
-        _REMatch<
+      : Result extends REMatch<any, any, any, any> ?
+        REMatch<
           Result["matched"],
           Result["rest"],
           Result["captures"],

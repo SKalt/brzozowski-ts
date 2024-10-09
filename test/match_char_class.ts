@@ -22,3 +22,14 @@ import { Eq } from "../src/utils";
 {
   type Actual = _ExecCharUnion<"bc", "a", "b">;
 }
+
+{
+  type Actual = _ExecCharUnion<"xyz", "a" | "b" | "c" | "d", never>;
+  const _: Eq<
+    Actual,
+    Err<"string does not match prefix"> & {
+      str: "x";
+      prefix: "a" | "b" | "c" | "d";
+    }
+  > = true;
+}

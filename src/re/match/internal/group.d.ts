@@ -1,4 +1,4 @@
-import { _REMatch } from ".";
+import { REMatch } from ".";
 import { Exec } from "..";
 import { Err, GroupKind, RE } from "../../ir";
 
@@ -12,12 +12,12 @@ export type _ExecGroup<
   Kind extends GroupKind.Capturing ?
     Exec<Pattern, Str, [], Captures> extends infer M ?
       M extends Err<any> ? M
-      : M extends _REMatch<any, any, any, any> ?
+      : M extends REMatch<any, any, any, any> ?
         Kind extends GroupKind.Capturing ?
           M["captures"] extends (
             [...Captures, ...infer SubCaptures extends string[]]
           ) ?
-            _REMatch<
+            REMatch<
               M["matched"],
               M["rest"],
               [...Captures, M["matched"], ...SubCaptures],

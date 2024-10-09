@@ -1,13 +1,8 @@
 import { JoinTuple } from "../../utils";
 import { Err, RE } from "../ir";
-import { _Exec, _Match, _REMatch } from "./internal";
-import { _ExecAlt } from "./internal/alt";
-import { _ExecCharUnion } from "./internal/char_union";
-import { _Derivative } from "./internal/derivative";
-import { _ExecGroup } from "./internal/group";
-import { _ExecRepeat } from "./internal/repeat";
+import { _Exec, _Match, REMatch } from "./internal";
 
-/** meta-type: <RE, Str, [..], {..}> => _REmatch */
+/** meta-type: <RE, Str, [..], {..}> => REmatch */
 export type Exec<
   R extends RE<any, any, any>,
   Str extends string,
@@ -16,11 +11,11 @@ export type Exec<
   NamedCaptures extends Record<string, string> = {},
 > =
   Matches["length"] extends R["parts"]["length"] ?
-    _REMatch<JoinTuple<Matches>, Str, Captures, NamedCaptures>
+    REMatch<JoinTuple<Matches>, Str, Captures, NamedCaptures>
   : R["parts"][Matches["length"]] extends infer Instruction ?
     _Exec<Instruction, Str, Captures, NamedCaptures> extends infer Result ?
       Result extends Err<any> ? Result
-      : Result extends _REMatch<any, any, any, any> ?
+      : Result extends REMatch<any, any, any, any> ?
         Exec<
           R,
           Result["rest"],
@@ -35,3 +30,5 @@ export type Exec<
         }
     : Err<"unreachable: infallible infer">
   : Err<"unreachable: Matches['length'] must be less than or equal to R['parts']">;
+
+export type { REMatch } from "./internal";

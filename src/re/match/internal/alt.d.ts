@@ -1,4 +1,5 @@
 import { _Match, _Exec } from ".";
+import { _CheckFinite } from "../../../utils";
 import { Err } from "../../ir";
 
 export type _ExecAlt<
@@ -6,7 +7,8 @@ export type _ExecAlt<
   Str extends string,
   Captures extends readonly [...string[]],
 > =
-  Branches extends [] ? Err<"no branches match">
+  _CheckFinite<Str> extends Err<infer E> ? Err<E>
+  : Branches extends [] ? Err<"no branches match">
   : Branches extends [infer Head, ...infer Tail] ?
     _Exec<Head, Str, Captures> extends infer Result ?
       Result extends Err<any> ? _ExecAlt<Tail, Str, Captures>

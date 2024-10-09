@@ -22,3 +22,8 @@ import { AsciiLowercase, Digit } from "../src/char";
   type Actual = Parse<null, "0-">;
   const _: Eq<Actual, { error: "unterminated char class" }> = true;
 }
+
+{
+  type Actual = Parse<null, "a-d]">;
+  const _: Eq<Actual, [CharUnion<"a" | "b" | "c" | "d">, ""]> = true;
+}
