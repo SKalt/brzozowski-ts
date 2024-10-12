@@ -1,9 +1,10 @@
 {
   "editor.formatOnSave": true,
-  "cSpell.words": ["brzozowski"],
+  "cSpell.words": ["brzozowski", "lookaround"],
   "prettier.experimentalTernaries": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.configPath": ".prettierrc",
   "prettier.prettierPath": "./node_modules/prettier",
-  "prettier.enableDebugLogs": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.inlayHints.enumMemberValues.enabled": true
 }

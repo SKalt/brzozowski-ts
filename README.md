@@ -10,18 +10,26 @@ There has already been discussion of the use cases and potential API in the [Typ
 This allows you to make assertions about constants:
 
 ```ts
+import type { Compile, Exec, Recognize } from "brzozowski-ts/src";
+
 type HexStrRE = Compile<"(?<hex>[0-9A-Fa-f]{5,})">;
 type Match = Exec<HexStrRE, "abc123">;
 const captures: Match["captures"] = ["abc123"];
 const groups: Match["groups"] = { hex: "abc123" };
 
 type HexStr<S extends string> = Recognize<HexStrRE, S>;
+type NominalHex = string & { readonly isHex: unique symbol };
 
-const mustBeHex = <S extends string>(hexStr: HexStr<S>) => hexStr;
-// OK! the return type is "abc123"
-const ok = mustBeHex("abc123");
+const castSpell = <S extends string>(hex: HexStr<S> | NominalHex) => hex;
+
+const spell = castSpell("00dead00" as const); // ok!
+const spellCheck: typeof spell = "00dead00"; // ok!
+
 // @ts-expect-error
-mustBeHex("xyz q");
+castSpell("xyz");
+
+let dynamicHex: string = "a5df0";
+castSpell(dynamicHex as NominalHex); // ok!
 ```
 
 <!-- TODO: note on integration with nominal typing -->
@@ -29,7 +37,9 @@ mustBeHex("xyz q");
 ## Limitations
 
 - `RecognizePattern<RE, Str>` uses a limited and naively-implemented regular expression language:
-  - no negative lookahead: `(?!nope)`
+  - no lookaround:
+    - no positive or negative lookahead: `(?=no)` `(?!nope)`
+    - no positive or negative lookbehind: `(?<=no)` `(?<!nope)`
   - matches always start from the start of the string: `/^always/`
   - string recognition is implemented as a series of potentially-nested commands rather than state transitions within a finite automaton.
   - no flags:
@@ -40,17 +50,25 @@ mustBeHex("xyz q");
 
 # Usage
 
-This is pre-alpha software: the API will change without warning, the implementation is brittle and incomplete, and it has not been optimized.
+This is pre-alpha software: the API will change without warning, the implementation is brittle and incomplete, and none of this code has been optimized for memory usage or speed.
 
 If you're brave, you can:
 
-- copy-paste `src/index.d.ts` and `src/internal.d.ts` into your codebase
-- `pnpm add -D "git+https://github.com/skalt/brzozowski-ts.git"`
+```sh
+pnpm add -D "git+https://github.com/skalt/brzozowski-ts.git"
+```
+
+and import the types like
+
+```ts
+import type { Compile, Exec } from "brzozowski-ts/src";
+```
 
 # Design
 
-Compile-time parsing follows this general algorithm: 0. Given a constant string type `S` and a regular expression string type `R`
+Compile-time parsing follows this general algorithm:
 
+0. Given a constant string type `S` and a regular expression string type `R`
 1. take the derivative of `R` with respect the start of `S` to produce a shorter regular expression `r` and a shorter string `s`
 2. recur using `s` and `r`
 3. when `r` is empty, the entire regular expression has been matched.
