@@ -7,7 +7,7 @@ There has already been discussion of the use cases and potential API in the [Typ
 
 # Use case
 
-This allows you to make assertions about constants:
+This allows you to make assertions about string constants:
 
 ```ts
 import type { Compile, Exec, Recognize } from "brzozowski-ts/src";
@@ -73,6 +73,10 @@ Compile-time parsing follows this general algorithm:
 2. recur using `s` and `r`
 3. when `r` is empty, the entire regular expression has been matched.
 4. if `s` is empty and `r` is not, the expression has not been matched
+
+## Prior art
+
+- [These DFA-based pure-type RegEx implementations](https://github.com/microsoft/TypeScript/issues/6579#issuecomment-710776922) were an inspiration! `brzozowski_ts` adds the ability to compile regular expressions, but uses a naive backtracking algorithm based on Brzozowski derivatives rather than <abbr title="Deterministic Finite Automaton">DFA</abbr>s.
 
 <!-- links -->
 

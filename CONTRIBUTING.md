@@ -4,7 +4,7 @@ Please do!
 
 ## Bug reports & feature requests
 
-Please submit bug reports and feature requests to https://github.com/SKalt/brzozowski-ts/issues/new/choose
+Please submit bug reports and feature requests to https://github.com/SKalt/brzozowski-ts/issues/new/choose.
 
 ## Development
 
