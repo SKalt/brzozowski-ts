@@ -76,7 +76,7 @@ Compile-time parsing follows this general algorithm:
 
 ## Prior art
 
-- [These DFA-based pure-type RegEx implementations](https://github.com/microsoft/TypeScript/issues/6579#issuecomment-710776922) were an inspiration! `brzozowski_ts` adds the ability to compile regular expressions, but uses a naive backtracking algorithm based on Brzozowski derivatives rather than <abbr title="Deterministic Finite Automaton">DFA</abbr>s.
+[These DFA-based pure-type RegEx implementations](https://github.com/microsoft/TypeScript/issues/6579#issuecomment-710776922) were an inspiration! `brzozowski_ts` adds the ability to compile regular expressions, but uses a naive backtracking algorithm based on Brzozowski derivatives rather than <abbr title="Deterministic Finite Automaton">DFA</abbr>s.
 
 <!-- links -->
 
